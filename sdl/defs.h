@@ -3,7 +3,8 @@
 enum event {
   EVENT_DECAY = 1,
   EVENT_POINT = 2,
-  EVENT_LINE = 3
+  EVENT_LINE = 3,
+  EVENT_SHORT = 4
 };
 
 extern void display (void);

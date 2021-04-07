@@ -2,6 +2,8 @@ var canvas;
 var ctx;
 var ws;
 var fullscreen = false;
+var current_x = -1;
+var current_y = -1;
 
 function fullscreenIII() {
     fullscreen = !fullscreen;
@@ -17,7 +19,7 @@ function decay() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-var receiveTYPE = [null, null, receivePoint, receiveLine];
+var receiveTYPE = [null, null, receivePoint, receiveLine, receiveShort];
 
 function next(fn) {
     ws.on('message', fn);
@@ -43,6 +45,8 @@ function receivePoint() {
         console.log(">> Point " + x + "," + y);
         ctx.strokeStyle = "#00FF00";
         ctx.strokeRect(x, y, 1, 1);
+        current_x = x;
+        current_y = y;
         next(receiveCommand);
     }
 }
@@ -59,6 +63,24 @@ function receiveLine() {
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
+        ctx.stroke();
+        current_x = x2;
+        current_y = y2;
+        next(receiveCommand);
+    }
+}
+
+function receiveShort() {
+    if (ws.rQlen() >= 2) {
+        var bytes = ws.rQshiftBytes(2);
+        dx = (bytes[0] ^ 0x80) - 0x80;
+        dy = (bytes[1] ^ 0x80) - 0x80;
+        ctx.strokeStyle = "#00FF00";
+        ctx.beginPath();
+        ctx.moveTo(current_x, current_y);
+        current_x += dx;
+        current_y += dy;
+        ctx.lineTo(current_x, current_y);
         ctx.stroke();
         next(receiveCommand);
     }

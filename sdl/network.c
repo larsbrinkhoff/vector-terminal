@@ -2,6 +2,8 @@
 #include <SDL_net.h>
 #include "defs.h"
 
+static int current_x, current_y;
+
 static TCPsocket connect (char *host, int port)
 {
   IPaddress address;
@@ -37,10 +39,11 @@ receive (TCPsocket s, void *data, int n)
   return 0;
 }
 
-int network (void *x)
+int network (void *ignore)
 {
   unsigned char command[10];
   TCPsocket sock;
+  int x, y;
 
   sock = connect ("localhost", 12345);
 
@@ -49,15 +52,25 @@ int network (void *x)
     switch (command[0]) {
     case EVENT_POINT:
       receive (sock, command, 4);
-      draw_point ((command[0] << 8) | command[1],
-                  (command[2] << 8) | command[3]);
+      current_x = (command[0] << 8) | command[1];
+      current_y = (command[2] << 8) | command[3];
+      draw_point (current_x, current_y);
       break;
     case EVENT_LINE:
       receive (sock, command, 8);
-      draw_line ((command[0] << 8) | command[1],
-                 (command[2] << 8) | command[3],
-                 (command[4] << 8) | command[5],
-                 (command[6] << 8) | command[7]);
+      x = (command[0] << 8) | command[1];
+      y = (command[2] << 8) | command[3];
+      current_x = (command[4] << 8) | command[5];
+      current_y = (command[6] << 8) | command[7];
+      draw_line (x, y, current_x, current_y);
+      break;
+    case EVENT_SHORT:
+      receive (sock, command, 2);
+      x = current_x;
+      y = current_y;
+      current_x += (command[0] ^ 0x80) - 0x80;
+      current_y += (command[1] ^ 0x80) - 0x80;
+      draw_line (x, y, current_x, current_y);
       break;
     }
   }
