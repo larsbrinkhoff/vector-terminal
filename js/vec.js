@@ -121,14 +121,22 @@ window.onload = function() {
     }
 
     if (window.attachEvent) {
-        window.attachEvent('onkeydown', keydownTV);
-        window.attachEvent('onkeyup', keyupTV);
+        window.attachEvent('onkeydown', keydown);
+        window.attachEvent('onkeyup', keyup);
     } else if (window.addEventListener) {
-        window.addEventListener('keydown', keydownTV, false);
-        window.addEventListener('keyup', keyupTV, false);
+        window.addEventListener('keydown', keydown, false);
+        window.addEventListener('keyup', keyup, false);
     }
 
     connectIII();
+}
+
+function keydown(ev) {
+    console.log("Key down: " + ev);
+}
+
+function keyup(ev) {
+    console.log("Key up: " + ev);
 }
 
 function button() {
