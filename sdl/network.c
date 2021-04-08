@@ -2,6 +2,7 @@
 #include <SDL_net.h>
 #include "defs.h"
 
+static TCPsocket current_socket = NULL;
 static int current_x, current_y;
 
 static TCPsocket connect (char *host, int port)
@@ -39,25 +40,33 @@ receive (TCPsocket s, void *data, int n)
   return 0;
 }
 
+int transmit (void *data, int n)
+{
+  if (current_socket == NULL)
+    return -1;
+  if (SDLNet_TCP_Send (current_socket, data, n) < n)
+    return -1;
+  return 0;
+}
+
 int network (void *ignore)
 {
   unsigned char command[10];
-  TCPsocket sock;
   int x, y;
 
-  sock = connect ("localhost", 12345);
+  current_socket = connect ("localhost", 12345);
 
   for (;;) {
-    receive (sock, command, 1);
+    receive (current_socket, command, 1);
     switch (command[0]) {
     case EVENT_POINT:
-      receive (sock, command, 4);
+      receive (current_socket, command, 4);
       current_x = (command[0] << 8) | command[1];
       current_y = (command[2] << 8) | command[3];
       draw_point (current_x, current_y);
       break;
     case EVENT_LINE:
-      receive (sock, command, 8);
+      receive (current_socket, command, 8);
       x = (command[0] << 8) | command[1];
       y = (command[2] << 8) | command[3];
       current_x = (command[4] << 8) | command[5];
@@ -65,7 +74,7 @@ int network (void *ignore)
       draw_line (x, y, current_x, current_y);
       break;
     case EVENT_SHORT:
-      receive (sock, command, 2);
+      receive (current_socket, command, 2);
       x = current_x;
       y = current_y;
       current_x += (command[0] ^ 0x80) - 0x80;

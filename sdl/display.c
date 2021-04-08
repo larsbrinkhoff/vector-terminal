@@ -111,6 +111,24 @@ static void handle_user_event (SDL_UserEvent *ev)
     }
 }
 
+static void key (SDL_KeyboardEvent *key)
+{
+  unsigned char data[3];
+  data[0] = 1;
+  switch (key->state) {
+  case SDL_PRESSED:
+    data[1] = 1;
+    break;
+  case SDL_RELEASED:
+    data[1] = 2;
+    break;
+  default:
+    fatal ("Bad key event.");
+  }
+  data[2] = key->keysym.scancode;
+  transmit (data, 3);
+}
+
 void display (void)
 {
   SDL_Event ev;
@@ -139,9 +157,9 @@ void display (void)
       SDL_Quit ();
       exit (0);
 
-    case SDL_KEYDOWN:
-      break;
     case SDL_KEYUP:
+    case SDL_KEYDOWN:
+      key (&ev.key);
       break;
 
     case SDL_USEREVENT:
