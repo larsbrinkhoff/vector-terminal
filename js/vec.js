@@ -36,7 +36,8 @@ function decay() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-var receiveTYPE = [null, null, receivePoint, receiveLine, receiveShort];
+var receiveTYPE = [null, null, receivePoint, receiveLine, receiveShort,
+                   shortPoint];
 
 function next(fn) {
     ws.on('message', fn);
@@ -98,6 +99,18 @@ function receiveShort() {
         current_y += dy;
         ctx.lineTo(current_x, current_y);
         ctx.stroke();
+        next(receiveCommand);
+    }
+}
+
+function shortPoint() {
+    if (ws.rQlen() >= 2) {
+        var bytes = ws.rQshiftBytes(2);
+        current_x += (bytes[0] ^ 0x80) - 0x80;
+        current_y += (bytes[1] ^ 0x80) - 0x80;
+        console.log(">> ShortPoint " + current_x + "," + current_y);
+        ctx.strokeStyle = "#00FF00";
+        ctx.strokeRect(current_x, current_y, 1, 1);
         next(receiveCommand);
     }
 }

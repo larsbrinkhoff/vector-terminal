@@ -1,5 +1,6 @@
 #include <SDL.h>
 #include <SDL_net.h>
+#include <stdio.h>
 #include "defs.h"
 
 static TCPsocket current_socket = NULL;
@@ -63,6 +64,7 @@ int network (void *ignore)
       receive (current_socket, command, 4);
       current_x = (command[0] << 8) | command[1];
       current_y = (command[2] << 8) | command[3];
+      //fprintf (stderr, "Point %d,%d\n", current_x, current_y);
       draw_point (current_x, current_y);
       break;
     case EVENT_LINE:
@@ -71,6 +73,7 @@ int network (void *ignore)
       y = (command[2] << 8) | command[3];
       current_x = (command[4] << 8) | command[5];
       current_y = (command[6] << 8) | command[7];
+      //fprintf (stderr, "Line %d,%d - %d,%d\n", x, y, current_x, current_y);
       draw_line (x, y, current_x, current_y);
       break;
     case EVENT_SHORT:
@@ -79,7 +82,15 @@ int network (void *ignore)
       y = current_y;
       current_x += (command[0] ^ 0x80) - 0x80;
       current_y += (command[1] ^ 0x80) - 0x80;
+      //fprintf (stderr, "ShortLine %d,%d - %d,%d\n", x, y, current_x, current_y);
       draw_line (x, y, current_x, current_y);
+      break;
+    case 5:
+      receive (current_socket, command, 2);
+      current_x += (command[0] ^ 0x80) - 0x80;
+      current_y += (command[1] ^ 0x80) - 0x80;
+      //fprintf (stderr, "ShortPoint %d,%d\n", current_x, current_y);
+      draw_point (current_x, current_y);
       break;
     }
   }
